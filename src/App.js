@@ -4,14 +4,18 @@ import './App.css';
 function App() {
 
   const [isLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState("Loading whoishiring submissions...");
+  const [loadingMessage, setLoadingMessage] = useState("Loading whoishiring submissions list...");
 
   useEffect(() => {
-    fetch('https://hacker-news.firebaseio.com/v0/user/whoishiring.json?print=pretty')
+    fetch('https://hacker-news.firebaseio.com/v0/user/whoishiring.json')
       .then(response => response.json())
       .then(data => {
-        setLoadingMessage("Done");
-        console.log(data)
+        setLoadingMessage("Loading whoishiring submissions...");
+        let responses = data.submitted.slice(0, 9)
+          .map(submissionId => fetch('https://hacker-news.firebaseio.com/v0/item/' + submissionId + '.json'));
+        Promise.all(responses)
+          .then(responses => Promise.all(responses.map(response => response.json())))
+          .then(responses => console.log(responses))
       });
   }, []);
 
