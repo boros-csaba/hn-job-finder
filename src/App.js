@@ -17,16 +17,19 @@ function App() {
           .then(responses => Promise.all(responses.map(response => response.json())))
           .then(submissions => {
             let postIds = submissions.flatMap(item => item.kids);
+            const batchSize = 50;
             const loadPosts = async (postIds) => {
-              for (var i = 0; i < postIds.length; i++) {
+              for (var i = 0; i < postIds.length; i += batchSize) {
                 setLoadingMessage('Loading item ' + (i + 1) + ' of ' + postIds.length);
-                let response = await fetch('https://hacker-news.firebaseio.com/v0/item/' + postIds[1] + '.json')
-                  .then(response => response.json());
-                console.log(response);
+                let responses = postIds.slice(i, i + batchSize + 1)
+                  .map(postId => fetch('https://hacker-news.firebaseio.com/v0/item/' + postId + '.json'));
+                let x = await Promise.all(responses)
+                  .then(responses => Promise.all(responses.map(response => response.json())))
+                
+                console.log(x);
               }
             }
             loadPosts(postIds);
-            
           })
       });
   }, []);
