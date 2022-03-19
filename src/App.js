@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import JobList from './components/job-list/job-list.component';
 import './App.css';
 
 function App() {
@@ -52,7 +53,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         {isLoading && <p>{loadingMessage}</p>}
-        {!isLoading && <p>Test</p>}
+        {!isLoading && <JobList />}
       </header>
     </div>
   );
