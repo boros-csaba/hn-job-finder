@@ -3,7 +3,7 @@ import './App.css';
 
 function App() {
 
-  const [isLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Loading whoishiring submissions list...');
 
   useEffect(() => {
@@ -18,12 +18,16 @@ function App() {
           .then(submissions => {
             let postIds = submissions.flatMap(item => item.kids)
             const batchSize = 50;
+            const allPromises = [];
             const loadPosts = async (postIds) => {
               for (var i = 0; i < postIds.length; i += batchSize) {
                 setLoadingMessage('Loading item ' + (i + 1) + ' of ' + postIds.length);
                 let responses = postIds.slice(i, i + batchSize + 1)
                   .filter(postId => localStorage.getItem(postId) == null)
                   .map(postId => fetch('https://hacker-news.firebaseio.com/v0/item/' + postId + '.json'));
+
+                allPromises.push(responses);
+
                 let posts = await Promise.all(responses)
                   .then(responses => Promise.all(responses.map(response => response.json())))
                 posts.forEach(post => {
@@ -33,6 +37,11 @@ function App() {
                   }));
                 });
               }
+
+              Promise.all(allPromises)
+                .then(() => {
+                  setIsLoading(false)
+                });
             }
             loadPosts(postIds);
           })
@@ -42,7 +51,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <p>{loadingMessage}</p>
+        {isLoading && <p>{loadingMessage}</p>}
+        {!isLoading && <p>Test</p>}
       </header>
     </div>
   );
