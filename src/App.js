@@ -8,6 +8,11 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState('Loading whoishiring submissions list...');
 
   useEffect(() => {
+    let processedPosts = [];
+    if (localStorage.getItem("processed-posts")) {
+      processedPosts = JSON.parse(localStorage.getItem("processed-posts"));
+    }
+
     fetch('https://hacker-news.firebaseio.com/v0/user/whoishiring.json')
       .then(response => response.json())
       .then(data => {
@@ -24,7 +29,7 @@ function App() {
               for (var i = 0; i < postIds.length; i += batchSize) {
                 setLoadingMessage('Loading item ' + (i + 1) + ' of ' + postIds.length);
                 let responses = postIds.slice(i, i + batchSize + 1)
-                  .filter(postId => localStorage.getItem(postId) == null)
+                  .filter(postId => !processedPosts.includes(postId))
                   .map(postId => fetch('https://hacker-news.firebaseio.com/v0/item/' + postId + '.json'));
 
                 allPromises.push(responses);
@@ -32,16 +37,15 @@ function App() {
                 let posts = await Promise.all(responses)
                   .then(responses => Promise.all(responses.map(response => response.json())))
                 posts.forEach(post => {
-                  localStorage.setItem(post.id, JSON.stringify({
-                    text: post.text,
-                    time: post.time
-                  }));
+                  processedPosts.push(post.id);
                 });
               }
 
               Promise.all(allPromises)
                 .then(() => {
-                  setIsLoading(false)
+                  localStorage.setItem("processed-posts", JSON.stringify(processedPosts));
+                  setIsLoading(false);
+                  let jobs = {};
                 });
             }
             loadPosts(postIds);
